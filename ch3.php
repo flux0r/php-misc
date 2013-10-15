@@ -156,8 +156,133 @@ class CdProduct extends ShopProduct2 {
 	}
 }
 
+class BookProduct extends ShopProduct2 {
+	public $numPages;
+
+	public function __construct($title, $producerFirstName,
+				$producerMainName, $price, $numPages) {
+		parent::__construct($title, $producerFirstName,
+				$producerMainName, $price);
+		$this->numPages = numPages;
+	}
+
+	public function getNumPages() {
+		return $this->numPages;
+	}
+
+	public function getSummaryLine() {
+		return parent::getSummaryLine()
+			." page count - "
+			."{$this->getNumPages()}";
+	}
+}
+
 $cd0 = new CdProduct("Crappy Beats", "Blah Blah", "Who Cares", 49.99, 34);
 print "Using ``extends'':\n\t{$cd0->getSummaryLine()}\n";
+
+
+
+/*----------------------------------------------------------------------------
+ * Managing data access
+ *
+ *	* Public properties and methods can be accessed from any context
+ *	* Private properties and methods can only be accessed in the current 
+ *	  class; even children cannot access a parent class' private 
+ *	  definitions
+ *	* A protected definition has the same access as private definitions, 
+ *	  except children can access protected definitions in any ancestor 
+ *	  classes
+ */
+class ShopProduct3 {
+	private $title;
+	private $producerMainName;
+	private $producerFirstName;
+	protected $price;
+	private $discount = 0;
+
+	public function __construct($title, $firstNm, $mainNm, $price) {
+		$this->title			= $title;
+		$this->producerMainName		= $mainNm;
+		$this->producerFirstName	= $firstNm;
+		$this->price			= $price;
+	}
+
+	public function title() {
+		return $this->title;
+	}
+	
+	public function producerMainName() {
+		return $this->producerMainName;
+	}
+
+	public function producerFirstName() {
+		return $this->producerFirstName;
+	}
+
+	public function producer() {
+		return "{$this->producerFirstName} "
+			."{$this->producerMainName}";
+	}
+
+	public function price() {
+		return $this->price - $this->discount;
+	}
+
+	public function discount() {
+		return $this->discount;
+	}
+
+	public function setDiscount($x) {
+		$this->discount = $x;
+	}
+
+	public function summaryLine() {
+		return "{$this->title()} ({$this->producer()})";
+	}
+}
+
+class Cd extends ShopProduct3 {
+	private $playLength = 0;
+
+	public function __construct($title, $first, $main, $p, $l) {
+		parent::__construct($title, $first, $main, $p);
+		$this->playLength = $l;
+	}
+
+	public function playLength() {
+		return $this->playLength;
+	}
+
+	public function summaryLine() {
+		return parent::summaryLine()
+			." playing time - "
+			."{$this->playLength()}";
+	}
+}
+
+class Book extends ShopProduct3 {
+	private $numPages = 0;
+
+	public function __construct($title, $first, $main, $p, $n) {
+		parent::__construct($title, $first, $main, $p);
+		$this->numPages = $n;
+	}
+
+	public function numPages() {
+		return $this->numPages;
+	}
+
+	public function summaryLine() {
+		return parent::summaryLine()
+			." page count - "
+			."{$this->numPages()}";
+	}
+
+	/* Books can't have discounts. */
+	public function price() {
+		return $this->price;
+	}
+}
 
 
 
