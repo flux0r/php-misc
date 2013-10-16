@@ -193,12 +193,14 @@ print "Using ``extends'':\n\t{$cd0->getSummaryLine()}\n";
  *	  except children can access protected definitions in any ancestor 
  *	  classes
  */
-class ShopProduct3 {
+class Product {
 	private $title;
 	private $producerMainName;
 	private $producerFirstName;
 	protected $price;
 	private $discount = 0;
+
+	private $id = 0;
 
 	public function __construct($title, $firstNm, $mainNm, $price) {
 		$this->title			= $title;
@@ -236,12 +238,43 @@ class ShopProduct3 {
 		$this->discount = $x;
 	}
 
+	public function setId($x) {
+		$this->id = $x;
+	}
+
 	public function summaryLine() {
 		return "{$this->title()} ({$this->producer()})";
 	}
+
+	public static function instance($id, PDO $d) {
+		$q = $d->prepare("select * from products where id = ?");
+		$r = $q->execute(array($id));
+		$xs = $q->fetch();
+
+		if (empty($xs)) {
+			return null;
+		}
+
+		if ($xs["type"] == "book") {
+			$prod = new Book($row["title"], $row["firstname"],
+				$row["mainname"], $row["price"],
+				$row["numpages"]);
+		} else if ($xs["type"] == "cd") {
+			$prod = new Book($row["title"], $row["firstname"],
+				$row["mainname"], $row["price"],
+				$row["playlength"]);
+		} else {
+			$prod = new Product($row["title"], $row["firstname"],
+				$row["mainname"], $row["price"]);
+		}
+
+		$prod->setId($row["id"]);
+		$prod->setDiscount($row["discount"]);
+		return $prod;
+	}
 }
 
-class Cd extends ShopProduct3 {
+class Cd extends Product {
 	private $playLength = 0;
 
 	public function __construct($title, $first, $main, $p, $l) {
@@ -260,7 +293,7 @@ class Cd extends ShopProduct3 {
 	}
 }
 
-class Book extends ShopProduct3 {
+class Book extends Product {
 	private $numPages = 0;
 
 	public function __construct($title, $first, $main, $p, $n) {
