@@ -14,18 +14,18 @@ class StaticEx0 {
 	 * If I change a static definition, the change is available to all 
 	 * instances of the class.
 	 */
-	static $helloCount = 0;
+	static $hello_cnt = 0;
 	static public function hello()
 	{
 		/* ``Self'' is like ``$this'' for classes. */
-		self::$helloCount++;
+		self::$hello_cnt++;
 		return "hello";
 	}
 }
 
-print StaticEx0::$helloCount."\n";
+print StaticEx0::$hello_cnt."\n";
 print StaticEx0::hello()."\n";
-print StaticEx0::$helloCount."\n";
+print StaticEx0::$hello_cnt."\n";
 
 
 
@@ -57,7 +57,7 @@ print ConstEx0::DEBLAH."\n";
 abstract class ProductWriter {
 	protected $products = array();
 
-	public function insertProduct(Product $x)
+	public function insert(Product $x)
 	{
 		$this->products[] = $x;
 	}
@@ -75,17 +75,123 @@ abstract class ProductWriter {
 class XmlProductWriter extends ProductWriter {
 	public function write()
 	{
-		$r = "<?xml version=\"1.0\" encoding=\"UTF-8\">\n<products>\n";
+		$r = "<?xml version=\"1.0\" encoding=\"UTF-8\">\n"
+			."<products>\n";
 		foreach ($this->products as $p) {
 			$r .= "\t<product title=\"{$p->title()}\">\n"
-				."\t\t<summary>{$p->summaryLine()}</summary>\n"
+				."\t\t<summary>{$p->summary()}"
+				."</summary>\n"
 				."\t</product>\n";
 		}
-		$r .= "</products>\n";
+		return $r .= "</products>\n";
+	}
+}
+
+class StringProductWriter extends ProductWriter {
+	public function write()
+	{
+		$r = "PRODUCTS:\n";
+		foreach ($this->products as $p) {
+			$r .= "\t{$p->summary()}\n";
+		}
 		return $r;
 	}
 }
 
 
 
+/*----------------------------------------------------------------------------
+ * Interfaces
+ *
+ * Interfaces can't contain any implementations. Use the ``implements'' 
+ * keyword to say a class implements an interface. (These seem really 
+ * powerful because a class can implement any number of interfaces. It might 
+ * be the closest thing to a type class in Haskell.)
+ */
+
+interface Chargeable {
+	public function price();
+}
+
+class Ransom implements Chargeable {
+	private $price = 0;
+
+	public function __construct($x)
+	{
+		$this->price = $x;
+	}
+
+	public function price()
+	{
+		return $this->price;
+	}
+
+	public function set_price($x)
+	{
+		$this->price = $x;
+	}
+}
+
+
+
+/*----------------------------------------------------------------------------
+ * Late static bindings
+ *
+ * Earlier, I said that ``self'' is like ``this'' for classes. There is a 
+ * subtle but important difference: ``self'' is evaluated in the context of 
+ * the class that created it. This means that if I make an abstract class 
+ * with a method that makes use of ``new self()'', any call to that method 
+ * will give an error because I've tried to instantiate an abstract class. 
+ * This happens even if I call the method with a handle to a concrete class 
+ * that is a descendent of the abstract class.
+ *
+ * To fix this, I can make the method a ``static'' method. When a static 
+ * method is called using a handle to a descendent class of an abstract 
+ * class, the call is evaluated in the context of the invoking class instead 
+ * of the containing class.
+ *
+ * I can also use the static keyword to get a handle to the invoking class 
+ * for other methods.
+ */
+
+abstract class DomainObject {
+	private $group;
+
+	/* Using ``static'' to get a handle to the invoking class. */
+	public function __construct()
+	{
+		$this->group = static::group();
+	}
+
+	/* Using ``static'' to make a new object of the invoking class. */
+	public static function create()
+	{
+		return new static();
+	}
+
+	public static function group()
+	{
+		return "default";
+	}
+}
+
+class User extends DomainObject {
+}
+
+class Document extends DomainObject {
+	public static function group()
+	{
+		return "document";
+	}
+}
+
+class SpreadSheet extends Document {
+}
+
+print_r(User::create());	/* Has group == "default" */
+print_r(SpreadSheet::create());	/* Has group == "document" */
+
+
+
+/*--------------------------------------------------------------------------*/
 ?>
